@@ -10,6 +10,7 @@ import (
 	"github.com/pulumi/pulumi-random/sdk/v4/go/random"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/redhat-developer/mapt/cmd/mapt/cmd/constants"
 	"github.com/redhat-developer/mapt/pkg/manager"
 	maptContext "github.com/redhat-developer/mapt/pkg/manager/context"
 	infra "github.com/redhat-developer/mapt/pkg/provider"
@@ -42,8 +43,9 @@ type Request struct {
 	AMILang     string
 	AMIKeepCopy bool
 	// Features
-	Spot   bool
-	Airgap bool
+	Spot                 bool
+	Airgap               bool
+	SetupGHActionsRunner bool // setup as github actions runner
 	// internal management
 	// For airgap scenario there is an orchestation of
 	// a phase with connectivity on the machine (allowing bootstraping)
@@ -56,9 +58,11 @@ type Request struct {
 }
 
 type userDataValues struct {
-	Username      string
-	Password      string
-	AuthorizedKey string
+	Username             string
+	Password             string
+	AuthorizedKey        string
+	InstallActionsRunner bool
+	ActionsRunnerSnippet string
 }
 
 //go:embed bootstrap.ps1
@@ -322,7 +326,9 @@ func (r *Request) getUserdata(ctx *pulumi.Context,
 				userDataValues{
 					r.AMIUser,
 					password,
-					authorizedKey},
+					authorizedKey,
+					r.SetupGHActionsRunner,
+					constants.WindowsActionsRunnerInstallSnippet},
 				resourcesUtil.GetResourceName(
 					r.Prefix, awsWindowsDedicatedID, "userdatas"),
 				string(BootstrapScript[:]))

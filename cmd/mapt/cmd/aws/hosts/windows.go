@@ -64,14 +64,16 @@ func getWindowsCreate() *cobra.Command {
 			// Run create
 			if err := windows.Create(
 				&windows.Request{
-					Prefix:      "main",
-					AMIName:     viper.GetString(amiName),
-					AMIUser:     viper.GetString(amiUsername),
-					AMIOwner:    viper.GetString(amiOwner),
-					AMILang:     viper.GetString(amiLang),
-					AMIKeepCopy: viper.IsSet(amiKeepCopy),
-					Spot:        viper.IsSet(spot),
-					Airgap:      viper.IsSet(airgap)}); err != nil {
+					Prefix:               "main",
+					AMIName:              viper.GetString(amiName),
+					AMIUser:              viper.GetString(amiUsername),
+					AMIOwner:             viper.GetString(amiOwner),
+					AMILang:              viper.GetString(amiLang),
+					AMIKeepCopy:          viper.IsSet(amiKeepCopy),
+					Spot:                 viper.IsSet(spot),
+					Airgap:               viper.IsSet(airgap),
+					SetupGHActionsRunner: viper.IsSet(params.InstallGHActionsRunner),
+				}); err != nil {
 				logging.Error(err)
 			}
 			return nil
@@ -87,6 +89,7 @@ func getWindowsCreate() *cobra.Command {
 	flagSet.Bool(airgap, false, airgapDesc)
 	flagSet.Bool(spot, false, spotDesc)
 	flagSet.Bool(amiKeepCopy, false, amiKeepCopyDesc)
+	flagSet.Bool(params.InstallGHActionsRunner, false, amiKeepCopyDesc)
 	c.PersistentFlags().AddFlagSet(flagSet)
 	return c
 }
