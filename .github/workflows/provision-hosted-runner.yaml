@@ -1,0 +1,47 @@
+name: provision-hosted-runner
+
+on:
+  workflow_call:
+    inputs:
+      operating_system:
+        required: true
+        type: string
+      runner_repo:
+        required: true
+        type: string
+      runner_registration_token:
+        required: true
+        type: string
+
+jobs:
+  provision_runner:
+    name: provision-runner
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download mapt image from artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mapt
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Import mapt image
+        run: |
+          podman load -i mapt.tar
+          podman images
+      - name: Run mapt
+        run: |
+          podman run -d --name mapt-create --rm \
+            -v ${PWD}:/workspace:z \
+            -e ARM_CLIENT_ID=${{secrets.ARM_CLIENT_ID}} \
+            -e ARM_CLIENT_SECRET=${{secrets.ARM_CLIENT_SECRET}} \
+            -e ARM_TENANT_ID=${{secrets.ARM_TENANT_ID}} \
+            -e ARM_SUBSCRIPTION_ID=${{secrets.ARM_SUBSCRIPTION_ID}} \
+            -e AZURE_SOTRAGE_ACCOUNT=${{secrets.AZURE_SOTRAGE_ACCOUNT}} \
+            -e AZURE_STORAGE_KEY=${{secrets.AZURE_STORAGE_KEY}} \
+            -e gh_runner_token=$(echo -n '${{inputs.runner_registration_token}}' | base64 -d | gpg --decrypt --quiet --batch --passphrase ${{secrets.GPG_PASS}} --output -) \
+            ghcr.io/redhat-developer/mapt:pr-${{github.event.number}} azure ${{inputs.operating_system}} create \
+              --spot --project-name "az-ghrunner" \
+              --backed-url "azblob://mapt-gh-runner-mapt-state/${{github.repository}}-${{github.event.workflow_run.id}}" \
+              --install-ghactions-runner --ghactions-runner-name "az-runner-${{inputs.operating_system}}-${{github.event.workflow_run.id}}" \
+              --ghactions-runner-repo "${{inputs.runner_repo}}" --ghactions-runner-token "::add-mask::${gh_runner_token}"
+

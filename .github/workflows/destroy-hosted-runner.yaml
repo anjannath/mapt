@@ -1,0 +1,36 @@
+name: destroy-hosted-runner
+
+on:
+  workflow_call:
+    inputs:
+      operating_system:
+        required: true
+        type: string
+
+jobs:
+  remove_cloud_instance:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download mapt image from artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mapt
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Import mapt image
+        run: |
+          podman load -i mapt.tar
+          podman images
+      - name: Destroy instance
+        run: |
+          podman run -d --name mapt-destroy --rm \
+            -v ${PWD}:/workspace:z \
+            -e ARM_CLIENT_ID=${{secrets.ARM_CLIENT_ID}} \
+            -e ARM_CLIENT_SECRET=${{secrets.ARM_CLIENT_SECRET}} \
+            -e ARM_TENANT_ID=${{secrets.ARM_TENANT_ID}} \
+            -e ARM_SUBSCRIPTION_ID=${{secrets.ARM_SUBSCRIPTION_ID}} \
+            -e AZURE_SOTRAGE_ACCOUNT=${{secrets.AZURE_SOTRAGE_ACCOUNT}} \
+            -e AZURE_STORAGE_KEY=${{secrets.AZURE_STORAGE_KEY}} \
+            ghcr.io/redhat-developer/mapt:pr-${{github.event.number}} azure ${{inputs.operating_system}} \
+              destroy --project-name "az-ghrunner" \
+              --backed-url "azblob://mapt-gh-runner-mapt-state/${{github.repository}}-${{github.event.workflow_run.id}}"
