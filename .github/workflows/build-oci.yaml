@@ -1,9 +1,10 @@
 name: oci-builds
 
 on:
+  workflow_call:
   push:
     branches: [ main ]
-    tags:        
+    tags:
       - '*'
   pull_request:
     branches: [ main ]
@@ -21,7 +22,7 @@ jobs:
       shell: bash
       run: |
         IMG=ghcr.io/redhat-developer/mapt:pr-${{ github.event.number }} make oci-build
-        podman save -o mapt.tar ghcr.io/redhat-developer/mapt:pr-${{ github.event.number }}     
+        podman save -o mapt.tar ghcr.io/redhat-developer/mapt:pr-${{ github.event.number }}
         echo "ghcr.io/redhat-developer/mapt:pr-${{ github.event.number }}" > mapt-image
 
     - name: Save image for PR
@@ -47,4 +48,4 @@ jobs:
       if: ${{ github.event_name != 'pull_request' }}
       shell: bash
       run: make oci-push
-      
+
