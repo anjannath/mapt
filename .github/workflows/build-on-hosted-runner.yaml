@@ -1,0 +1,60 @@
+name: build-on-hosted-runner
+
+on:
+  workflow_run:
+    workflows:
+      - oci-builds
+    types:
+      - completed
+
+jobs:
+  get_runner_registration_token:
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-24.04
+    outputs:
+      runner_reg_token: ${{steps.fetch_token.outputs.token}}
+    steps:
+      - name: fetch token from API
+        id: fetch_token
+        run: |
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{secrets.GH_PAT_TOKEN}}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/redhat-developer/mapt/actions/runners/registration-token > token
+          token=$(cat token | jq .token | gpg --symmetric --quiet --batch --passphrase ${{secrets.GPG_PASS}} --output - | base64 -w0)
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+  hosted_runner_provision:
+    needs: get_runner_registration_token
+    uses: ./.github/workflows/provision-hosted-runner.yaml
+    with:
+      runner_repo: "https://github.com/redhat-developer/mapt"
+      operating_system: windows
+      runner_registration_token: ${{needs.get_runner_registration_token.outputs.runner_reg_token}}
+    secrets: inherit
+
+  test_run_selfhosted_runner:
+    runs-on: az-runner-ubuntu-${{github.even.workflow_run.id}}
+    needs: hosted_runner_provision
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+      - name: Build
+        run: make build
+      - name: Test
+        run: go test -v ./...
+
+  destroy_hosted_runner:
+    needs: test_run_selfhosted_runner
+    if: always()
+    uses: ./.github/workflows/destroy-hosted-runner.yaml
+    with:
+      operating_system: ubuntu
