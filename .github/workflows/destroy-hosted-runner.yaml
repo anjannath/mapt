@@ -1,0 +1,31 @@
+name: destroy-hosted-runner
+
+on:
+  workflow_call:
+    inputs:
+      operating_system:
+        required: true
+        type: string
+
+jobs:
+  remove_cloud_instance:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Code checkout
+      uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    - name: Build
+      run: make build
+    - name: Destroy instance
+      run: |
+          export ARM_CLIENT_ID=${{secrets.ARM_CLIENT_ID}}
+          export ARM_CLIENT_SECRET=${{secrets.ARM_CLIENT_SECRET}}
+          export ARM_TENANT_ID=${{secrets.ARM_TENANT_ID}}
+          export ARM_SUBSCRIPTION_ID=${{secrets.ARM_SUBSCRIPTION_ID}}
+          export AZURE_SOTRAGE_ACCOUNT=${{secrets.AZURE_SOTRAGE_ACCOUNT}}
+          export AZURE_STORAGE_KEY=${{secrets.AZURE_STORAGE_KEY}}
+          ./out/mapt azure ${{inputs.operating_system}} destroy --project-name "az-ghrunner" \
+            --backed-url "azblob://mapt-gh-runner-mapt-state/${{github.repository}}-${{github.event.workflow_run.id}}"
