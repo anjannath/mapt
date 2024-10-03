@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -69,7 +70,7 @@ const (
 	ArchiveURIProperty    = "uri"    // the dynamic property for an archive's URI.
 )
 
-func FromAssets(assets map[string]interface{}) (*Archive, error) {
+func FromAssetsWithWD(assets map[string]interface{}, wd string) (*Archive, error) {
 	if assets == nil {
 		// when provided assets are nil, create an empty archive
 		assets = make(map[string]interface{})
@@ -85,8 +86,16 @@ func FromAssets(assets map[string]interface{}) (*Archive, error) {
 		}
 	}
 	a := &Archive{Sig: ArchiveSig, Assets: assets}
-	err := a.EnsureHash()
+	err := a.EnsureHashWithWD(wd)
 	return a, err
+}
+
+func FromAssets(assets map[string]interface{}) (*Archive, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	return FromAssetsWithWD(assets, wd)
 }
 
 func FromPath(path string) (*Archive, error) {
@@ -332,7 +341,7 @@ func (a *Archive) Open() (Reader, error) {
 func (a *Archive) OpenWithWD(wd string) (Reader, error) {
 	contract.Assertf(a.HasContents(), "cannot read an archive that has no contents")
 	if a.IsAssets() {
-		return a.readAssets()
+		return a.readAssets(wd)
 	} else if a.IsPath() {
 		return a.readPath(wd)
 	} else if a.IsURI() {
@@ -347,6 +356,7 @@ type assetsArchiveReader struct {
 	keys        []string
 	archive     Reader
 	archiveRoot string
+	wd          string
 }
 
 func (r *assetsArchiveReader) Next() (string, *asset.Blob, error) {
@@ -380,14 +390,14 @@ func (r *assetsArchiveReader) Next() (string, *asset.Blob, error) {
 		switch t := r.assets[name].(type) {
 		case *asset.Asset:
 			// An asset can be produced directly.
-			blob, err := t.Read()
+			blob, err := t.ReadWithWD(r.wd)
 			if err != nil {
 				return "", nil, fmt.Errorf("failed to expand archive asset '%v': %w", name, err)
 			}
 			return name, blob, nil
 		case *Archive:
 			// An archive must be flattened into its constituent blobs. Open the archive for reading and loop.
-			archive, err := t.Open()
+			archive, err := t.OpenWithWD(r.wd)
 			if err != nil {
 				return "", nil, fmt.Errorf("failed to expand sub-archive '%v': %w", name, err)
 			}
@@ -404,7 +414,7 @@ func (r *assetsArchiveReader) Close() error {
 	return nil
 }
 
-func (a *Archive) readAssets() (Reader, error) {
+func (a *Archive) readAssets(wd string) (Reader, error) {
 	// To read a map-based archive, just produce a map from each asset to its associated reader.
 	m, isassets := a.GetAssets()
 	contract.Assertf(isassets, "Expected an asset map-based archive")
@@ -419,6 +429,7 @@ func (a *Archive) readAssets() (Reader, error) {
 	r := &assetsArchiveReader{
 		assets: m,
 		keys:   keys,
+		wd:     wd,
 	}
 	return r, nil
 }
@@ -960,6 +971,10 @@ func (r *zipArchiveReader) Next() (string, *asset.Blob, error) {
 			return "", nil, fmt.Errorf("failed to read ZIP inner file %v: %w", file.Name, err)
 		}
 
+		if file.UncompressedSize64 > math.MaxInt64 {
+			return "", nil, fmt.Errorf("file %v is too large to read", file.Name)
+		}
+		//nolint:gosec // uint64 -> int64 overflow is checked above.
 		blob := asset.NewRawBlob(body, int64(file.UncompressedSize64))
 		name := filepath.Clean(file.Name)
 		return name, blob, nil

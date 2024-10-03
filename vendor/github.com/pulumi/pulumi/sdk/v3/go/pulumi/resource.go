@@ -381,9 +381,7 @@ type ResourceOptions struct {
 
 	// Transforms is a list of functions that transform
 	// the resource's properties during construction.
-	//
-	// Experimental.
-	Transforms []XResourceTransform
+	Transforms []ResourceTransform
 
 	// URN is the URN of a previously-registered resource of this type.
 	URN string
@@ -434,12 +432,13 @@ type resourceOptions struct {
 	Providers               map[string]ProviderResource
 	ReplaceOnChanges        []string
 	Transformations         []ResourceTransformation
-	Transforms              []XResourceTransform
+	Transforms              []ResourceTransform
 	URN                     string
 	Version                 string
 	PluginDownloadURL       string
 	RetainOnDelete          bool
 	DeletedWith             Resource
+	Parameterization        []byte
 }
 
 func resourceOptionsSnapshot(ro *resourceOptions) *ResourceOptions {
@@ -519,6 +518,9 @@ type InvokeOptions struct {
 	// should be downloaded.
 	// This will be blank if the URL was inferred automatically.
 	PluginDownloadURL string
+
+	// This is an internal write only field that is used to store the parameterization from the default options.
+	parameterization []byte
 }
 
 // NOTE:
@@ -856,9 +858,7 @@ func Transformations(o []ResourceTransformation) ResourceOption {
 }
 
 // Transforms is an optional list of transforms to be applied to the resource.
-//
-// Experimental.
-func Transforms(o []XResourceTransform) ResourceOption {
+func Transforms(o []ResourceTransform) ResourceOption {
 	return resourceOption(func(ro *resourceOptions) {
 		ro.Transforms = append(ro.Transforms, o...)
 	})
@@ -913,5 +913,17 @@ func RetainOnDelete(b bool) ResourceOption {
 func DeletedWith(r Resource) ResourceOption {
 	return resourceOption(func(ro *resourceOptions) {
 		ro.DeletedWith = r
+	})
+}
+
+// If set this resource will be parameterized with the given package reference.
+func Parameterization(parameter []byte) ResourceOrInvokeOption {
+	return resourceOrInvokeOption(func(ro *resourceOptions, io *InvokeOptions) {
+		switch {
+		case ro != nil:
+			ro.Parameterization = parameter
+		case io != nil:
+			io.parameterization = parameter
+		}
 	})
 }
