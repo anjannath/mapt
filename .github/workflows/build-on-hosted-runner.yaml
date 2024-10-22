@@ -10,7 +10,8 @@ jobs:
   get_runner_registration_token:
     runs-on: ubuntu-24.04
     outputs:
-      runner_reg_token: ${{steps.fetch_token.output.token}}
+      runner_reg_token: ${{steps.fetch_token.outputs.token}}
+      test_op: ${{steps.test_op_st.outputs.test}}
     steps:
       - name: fetch token from API
         id: fetch_token
@@ -22,12 +23,28 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/redhat-developer/mapt/actions/runners/registration-token > token
           token=$(cat token | jq .token)
-          echo "::add-mask::$token"
           echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: print token
+        run: echo "::add-mask::${{ steps.fetch_token.outputs.token }}"
+      - name: set test output
+        id: test_op_st
+        run: echo "test=anjan" >> $GITHUB_OUTPUT
+      - name: print test output
+        run: echo "output is ${{ steps.test_op_st.outputs.test }}"
+
+  check_output:
+    runs-on: ubuntu-24.04
+    needs: get_runner_registration_token
+    steps:
+      - name: print output
+        run: echo $GITHUB_OUTPUT
+      - name: print token
+        run: echo "::add-mask::${{needs.get_runner_registration_token.outputs.runner_reg_token}}"
 
   hosted_runner_provision:
     needs: get_runner_registration_token
-    uses: ./provision-hosted-runner.yaml
+    uses: ./.github/workflows/provision-hosted-runner.yaml
     with:
       runner_repo: 'https://github.com/redhat-developer/mapt'
       operating_system: windows
@@ -36,7 +53,7 @@ jobs:
 
   test_run_selfhosted_runner:
     runs-on: az-runner-ubuntu-${{github.even.workflow_run.id}}
-    needs: provision_runner
+    needs: hosted_runner_provision
     steps:
     - name: Code checkout
       uses: actions/checkout@v4
@@ -50,7 +67,8 @@ jobs:
       run: go test -v ./...
 
   destroy_hosted_runner:
+    needs: test_run_selfhosted_runner
     if: always()
-    uses: ./destroy-hosted-runner.yaml
+    uses: ./.github/workflows/destroy-hosted-runner.yaml
     with:
       operating_system: ubuntu
