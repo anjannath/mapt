@@ -38,7 +38,7 @@ jobs:
             export AZURE_STORAGE_KEY=${{secrets.AZURE_STORAGE_KEY}}
             mkdir $HOME/workspace
             ./out/mapt azure ${{inputs.operating_system}} create --spot --project-name "az-ghrunner" \
-              --backed-url "azblob://mapt-gh-runner-mapt-state/${{github.repository}}-${{github.event.workflow_run.id}}" \
+              --backed-url "file:///${HOME}/${{github.repository}}-${{github.event.workflow_run.id}}" \
               --install-ghactions-runner --ghactions-runner-name "az-runner-${{inputs.operating_system}}-${{github.event.workflow_run.id}}" \
               --ghactions-runner-repo "${{inputs.runner_repo}}" --ghactions-runner-token ${{inputs.runner_registration_token}}
 

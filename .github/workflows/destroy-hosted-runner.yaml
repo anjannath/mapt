@@ -28,4 +28,4 @@ jobs:
           export AZURE_SOTRAGE_ACCOUNT=${{secrets.AZURE_SOTRAGE_ACCOUNT}}
           export AZURE_STORAGE_KEY=${{secrets.AZURE_STORAGE_KEY}}
           ./out/mapt azure ${{inputs.operating_system}} destroy --project-name "az-ghrunner" \
-            --backed-url "azblob://mapt-gh-runner-mapt-state/${{github.repository}}-${{github.event.workflow_run.id}}"
+            --backed-url "file:///${HOME}/${{github.repository}}-${{github.event.workflow_run.id}}"
