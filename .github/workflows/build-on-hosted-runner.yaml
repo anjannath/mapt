@@ -27,7 +27,7 @@ jobs:
 
   hosted_runner_provision:
     needs: get_runner_registration_token
-    uses: ./provision-hosted-runner.yaml
+    uses: ./.github/workflows/provision-hosted-runner.yaml
     with:
       runner_repo: 'https://github.com/redhat-developer/mapt'
       operating_system: ubuntu
@@ -36,7 +36,7 @@ jobs:
 
   test_run_selfhosted_runner:
     runs-on: az-runner-ubuntu-${{github.even.workflow_run.id}}
-    needs: provision_runner
+    needs: hosted_runner_provision
     steps:
     - name: Code checkout
       uses: actions/checkout@v4
@@ -50,7 +50,8 @@ jobs:
       run: go test -v ./...
 
   destroy_hosted_runner:
+    needs: test_run_selfhosted_runner
     if: always()
-    uses: ./destroy-hosted-runner.yaml
+    uses: ./.github/workflows/destroy-hosted-runner.yaml
     with:
       operating_system: ubuntu
