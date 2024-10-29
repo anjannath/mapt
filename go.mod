@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/coocood/freecache v1.2.4
-	github.com/pulumi/pulumi-command/sdk v0.11.1
+	github.com/pulumi/pulumi-command/sdk v1.0.1
 	github.com/pulumi/pulumi-random/sdk/v4 v4.16.2
 	github.com/pulumi/pulumi/sdk/v3 v3.135.0
 	github.com/sirupsen/logrus v1.9.3
@@ -17,7 +17,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.7.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6 v6.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resourcegraph/armresourcegraph v0.9.0
-	github.com/aws/amazon-ec2-instance-selector/v2 v2.4.2-0.20231006140257-d989c5d76f0e
+	github.com/aws/amazon-ec2-instance-selector/v3 v3.0.0
 	github.com/aws/aws-sdk-go-v2 v1.27.2
 	github.com/aws/aws-sdk-go-v2/config v1.27.18
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.142.0
@@ -37,8 +37,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.6 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/evertras/bubble-table v0.15.2 // indirect
-	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/imdario/mergo v0.3.16 // indirect
+	github.com/hashicorp/hcl/v2 v2.22.0 // indirect
+	github.com/imdario/mergo v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
@@ -53,7 +53,7 @@ require (
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
+	github.com/apparentlymart/go-textseg/v16 v16.0.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.18 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.5 // indirect
@@ -69,7 +69,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/charmbracelet/bubbles v0.16.1 // indirect
-	github.com/charmbracelet/bubbletea v0.25.0 // indirect
+	github.com/charmbracelet/bubbletea v1.1.2 // indirect
 	github.com/charmbracelet/lipgloss v0.7.1 // indirect
 	github.com/cloudflare/circl v1.3.8 // indirect
 	github.com/containerd/console v1.0.4 // indirect
@@ -100,7 +100,7 @@ require (
 	github.com/pulumi/pulumi-azure-native-sdk/v2 v2.64.2 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/santhosh-tekuri/jsonschema/v5 v5.0.0 // indirect
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1 // indirect
 	github.com/skeema/knownhosts v1.2.2 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
