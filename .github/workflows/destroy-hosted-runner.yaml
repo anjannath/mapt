@@ -34,4 +34,4 @@ jobs:
             -e AZURE_STORAGE_KEY=${{secrets.AZURE_STORAGE_KEY}} \
             ${MAPT_IMAGE} azure ${{inputs.operating_system}} \
               destroy --project-name "az-ghrunner" \
-              --backed-url "azblob://gh-anjan-maptls-mapt-state/${{github.repository}}-${{github.event.workflow_run.id}}"
+              --backed-url "azblob://gh-anjan-maptls-mapt-state/rhd-mapt-gh-runner/${{github.repository}}-${{github.event.workflow_run.id}}"

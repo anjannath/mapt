@@ -53,7 +53,7 @@ jobs:
             -e AZURE_STORAGE_KEY=${{secrets.AZURE_STORAGE_KEY}} \
             ${MAPT_IMAGE} azure ${{inputs.operating_system}} create \
               --spot --project-name "az-ghrunner" --conn-details-output /workspace \
-              --backed-url "azblob://gh-anjan-maptls-mapt-state/${{github.repository}}-${{github.event.workflow_run.id}}" \
+              --backed-url "azblob://gh-anjan-maptls-mapt-state/rhd-mapt-gh-runner/${{github.repository}}-${{github.event.workflow_run.id}}" \
               --install-ghactions-runner --ghactions-runner-name "az-runner-${{inputs.operating_system}}-${{github.event.workflow_run.id}}" \
               --ghactions-runner-repo "${{inputs.runner_repo}}" --ghactions-runner-token ${{steps.fetch_token.outputs.runner_token}}
 
